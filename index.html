@@ -1,0 +1,1875 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0,
+               viewport-fit=cover">
+
+<meta name="theme-color" content="#5668D8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ánimo">
+
+<title>Ánimo V3</title>
+
+<style>
+:root{
+    --primary:#5668D8;
+    --primary-dark:#4051BD;
+    --background:#F5F6FA;
+    --card:#FFFFFF;
+    --text:#20263A;
+    --muted:#72798C;
+    --border:#E5E7EF;
+    --success:#3FA66B;
+    --warning:#D69A28;
+    --danger:#C94B5B;
+}
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    margin:0;
+    background:var(--background);
+    color:var(--text);
+    font-family:-apple-system,
+                 BlinkMacSystemFont,
+                 "Segoe UI",
+                 Roboto,
+                 Helvetica,
+                 Arial,
+                 sans-serif;
+    min-height:100vh;
+    padding-bottom:90px;
+}
+
+button{
+    font-family:inherit;
+}
+
+.app{
+    max-width:720px;
+    margin:auto;
+    padding:0 16px;
+}
+
+/* HEADER */
+
+.header{
+    padding:
+        calc(18px + env(safe-area-inset-top))
+        4px
+        18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logo{
+    font-size:29px;
+    font-weight:800;
+    letter-spacing:-1px;
+}
+
+.subtitle{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:2px;
+}
+
+/* SCREENS */
+
+.screen{
+    display:none;
+}
+
+.screen.active{
+    display:block;
+}
+
+/* CARDS */
+
+.card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:22px;
+    margin-bottom:14px;
+    box-shadow:0 5px 25px rgba(32,38,58,.05);
+}
+
+/* HOME */
+
+.hero{
+    text-align:center;
+    padding:38px 22px;
+}
+
+.hero-icon{
+    font-size:54px;
+    margin-bottom:10px;
+}
+
+.hero h1{
+    margin:0 0 10px;
+    font-size:31px;
+    letter-spacing:-.7px;
+}
+
+.hero p{
+    color:var(--muted);
+    line-height:1.6;
+    margin:0 auto;
+    max-width:500px;
+}
+
+.primary{
+    width:100%;
+    border:none;
+    background:var(--primary);
+    color:white;
+    padding:16px;
+    border-radius:15px;
+    font-size:16px;
+    font-weight:700;
+    margin-top:22px;
+}
+
+.primary:active{
+    background:var(--primary-dark);
+    transform:scale(.99);
+}
+
+.secondary{
+    width:100%;
+    border:none;
+    background:#EEF0FC;
+    color:var(--primary-dark);
+    padding:15px;
+    border-radius:15px;
+    font-size:15px;
+    font-weight:700;
+}
+
+.danger{
+    width:100%;
+    border:none;
+    background:#FFF0F2;
+    color:var(--danger);
+    padding:15px;
+    border-radius:15px;
+    font-weight:700;
+}
+
+.home-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.home-button{
+    text-align:left;
+    min-height:130px;
+}
+
+.home-button .icon{
+    font-size:28px;
+    display:block;
+    margin-bottom:15px;
+}
+
+.home-button strong{
+    display:block;
+    font-size:16px;
+}
+
+.home-button small{
+    display:block;
+    color:var(--muted);
+    margin-top:5px;
+}
+
+/* TEST HEADER */
+
+.test-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:15px;
+}
+
+.back{
+    border:none;
+    background:none;
+    font-size:34px;
+    color:var(--muted);
+    padding:0 8px;
+}
+
+.test-title{
+    font-weight:800;
+    font-size:18px;
+}
+
+.test-progress-text{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:3px;
+}
+
+.progress{
+    height:7px;
+    background:#E7E9F0;
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:17px;
+}
+
+.progress-bar{
+    height:100%;
+    width:0%;
+    background:var(--primary);
+    transition:.3s;
+}
+
+/* QUESTION */
+
+.question-number{
+    color:var(--primary);
+    font-size:12px;
+    font-weight:800;
+    margin-bottom:10px;
+}
+
+.question h2{
+    font-size:24px;
+    line-height:1.35;
+    margin:0;
+}
+
+.answers{
+    margin-top:22px;
+    display:grid;
+    gap:10px;
+}
+
+.answer{
+    width:100%;
+    border:1px solid var(--border);
+    background:#F8F9FC;
+    color:var(--text);
+    border-radius:15px;
+    padding:16px;
+    text-align:left;
+    font-size:15px;
+}
+
+.answer:active{
+    background:#EEF0FC;
+    border-color:var(--primary);
+}
+
+/* RESULT */
+
+.result{
+    text-align:center;
+}
+
+.result-icon{
+    font-size:58px;
+}
+
+.score{
+    font-size:68px;
+    font-weight:900;
+    line-height:1;
+    margin-top:8px;
+}
+
+.score-label{
+    color:var(--muted);
+    font-size:13px;
+}
+
+.level{
+    font-size:21px;
+    font-weight:800;
+    margin-top:8px;
+}
+
+.result-text{
+    color:var(--muted);
+    line-height:1.6;
+}
+
+.info{
+    background:#F7F8FC;
+    border-radius:16px;
+    padding:16px;
+    margin-top:14px;
+    text-align:left;
+}
+
+.info strong{
+    display:block;
+    margin-bottom:6px;
+}
+
+.info p{
+    margin:0;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.5;
+}
+
+/* HISTORY */
+
+.section-title{
+    font-size:23px;
+    font-weight:800;
+    margin-bottom:4px;
+}
+
+.section-description{
+    color:var(--muted);
+    margin-top:0;
+    font-size:14px;
+}
+
+.chart-container{
+    position:relative;
+    width:100%;
+    height:250px;
+}
+
+canvas{
+    width:100%;
+    height:250px;
+}
+
+.empty{
+    text-align:center;
+    color:var(--muted);
+    padding:70px 15px;
+    font-size:14px;
+}
+
+.record{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.record-date{
+    font-weight:700;
+}
+
+.record-time{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:3px;
+}
+
+.record-score{
+    font-size:21px;
+    font-weight:900;
+}
+
+/* ABOUT */
+
+.about h2{
+    margin-top:0;
+}
+
+.about h3{
+    margin-bottom:5px;
+}
+
+.about p{
+    color:var(--muted);
+    line-height:1.6;
+}
+
+/* BOTTOM NAV */
+
+.bottom-nav{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:20;
+
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(15px);
+
+    border-top:1px solid var(--border);
+
+    display:flex;
+    justify-content:center;
+    gap:65px;
+
+    padding:
+        9px
+        10px
+        calc(9px + env(safe-area-inset-bottom));
+}
+
+.bottom-nav button{
+    border:none;
+    background:none;
+    color:var(--muted);
+    font-size:21px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+}
+
+.bottom-nav small{
+    font-size:10px;
+}
+
+.bottom-nav button.active{
+    color:var(--primary);
+}
+
+/* SESSION COUNTER */
+
+.session{
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    margin-bottom:12px;
+}
+
+.session strong{
+    color:var(--primary);
+}
+
+/* RESPONSIVE */
+
+@media(min-width:600px){
+
+    .app{
+        padding:0 22px;
+    }
+
+    .hero{
+        padding:55px;
+    }
+}
+
+@media(max-width:380px){
+
+    .home-grid{
+        grid-template-columns:1fr;
+    }
+
+    .question h2{
+        font-size:21px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+    <div>
+        <div class="logo">Ánimo</div>
+        <div class="subtitle">
+            Observa cómo te sientes
+        </div>
+    </div>
+</header>
+
+
+<!-- ================= HOME ================= -->
+
+<section id="home" class="screen active">
+
+    <div class="card hero">
+
+        <div class="hero-icon">🌿</div>
+
+        <h1>Haz una pausa.</h1>
+
+        <p>
+            Este breve cuestionario puede ayudarte a observar
+            cómo te has sentido durante los últimos días.
+        </p>
+
+        <button
+            class="primary"
+            onclick="startTest()">
+            Comenzar test
+        </button>
+
+    </div>
+
+
+    <div class="home-grid">
+
+        <button
+            class="card home-button"
+            onclick="showScreen('history')">
+
+            <span class="icon">📊</span>
+
+            <strong>Mi historial</strong>
+
+            <small>
+                Observa tu evolución
+            </small>
+
+        </button>
+
+
+        <button
+            class="card home-button"
+            onclick="showScreen('about')">
+
+            <span class="icon">ℹ️</span>
+
+            <strong>Sobre Ánimo</strong>
+
+            <small>
+                Cómo funciona
+            </small>
+
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- ================= TEST ================= -->
+
+<section id="test" class="screen">
+
+    <div class="test-header">
+
+        <button
+            class="back"
+            onclick="showScreen('home')">
+            ‹
+        </button>
+
+        <div>
+
+            <div class="test-title">
+                Test de estado de ánimo
+            </div>
+
+            <div
+                id="progressText"
+                class="test-progress-text">
+                Pregunta 1 de 9
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="progress">
+        <div
+            id="progressBar"
+            class="progress-bar">
+        </div>
+    </div>
+
+
+    <div class="session">
+        Medición
+        <strong id="sessionNumber">1</strong>
+        de 8
+    </div>
+
+
+    <div class="card">
+
+        <div
+            id="questionNumber"
+            class="question-number">
+            PREGUNTA 1
+        </div>
+
+        <div class="question">
+            <h2 id="questionText"></h2>
+        </div>
+
+        <div
+            id="answers"
+            class="answers">
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= RESULT ================= -->
+
+<section id="result" class="screen">
+
+    <div class="test-header">
+
+        <button
+            class="back"
+            onclick="showScreen('home')">
+            ‹
+        </button>
+
+        <div class="test-title">
+            Tu resultado
+        </div>
+
+    </div>
+
+
+    <div class="card result">
+
+        <div
+            id="resultIcon"
+            class="result-icon">
+            🌿
+        </div>
+
+        <div
+            id="score"
+            class="score">
+            0
+        </div>
+
+        <div class="score-label">
+            puntuación de 0 a 27
+        </div>
+
+        <div
+            id="level"
+            class="level">
+            Mínimo
+        </div>
+
+        <p
+            id="resultText"
+            class="result-text">
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="info">
+
+            <strong>
+                Importante
+            </strong>
+
+            <p>
+                Ánimo es una herramienta de
+                autoobservación. El resultado no
+                constituye un diagnóstico médico.
+                Si los síntomas persisten o afectan
+                tu vida cotidiana, considera consultar
+                con un profesional de salud.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <button
+        id="saveButton"
+        class="primary"
+        onclick="saveResult()">
+        Guardar resultado
+    </button>
+
+
+    <button
+        class="secondary"
+        style="margin-top:10px"
+        onclick="newMeasurement()">
+        Hacer otra medición
+    </button>
+
+</section>
+
+
+<!-- ================= HISTORY ================= -->
+
+<section id="history" class="screen">
+
+    <div class="test-header">
+
+        <button
+            class="back"
+            onclick="showScreen('home')">
+            ‹
+        </button>
+
+        <div>
+
+            <div class="test-title">
+                Mi historial
+            </div>
+
+            <div
+                id="historyCount"
+                class="test-progress-text">
+                0 registros
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="section-title">
+            Evolución
+        </div>
+
+        <p class="section-description">
+            Tus resultados guardados en este dispositivo.
+        </p>
+
+        <div
+            id="chartArea"
+            class="chart-container">
+
+            <canvas id="chart"></canvas>
+
+            <div
+                id="emptyChart"
+                class="empty">
+                Necesitas al menos 2 registros
+                para mostrar la evolución.
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <button
+        class="secondary"
+        onclick="exportData()">
+        📤 Exportar mis datos
+    </button>
+
+
+    <button
+        class="danger"
+        style="margin-top:10px"
+        onclick="clearHistory()">
+        Borrar historial
+    </button>
+
+
+    <div
+        id="records"
+        style="margin-top:14px">
+    </div>
+
+</section>
+
+
+<!-- ================= ABOUT ================= -->
+
+<section id="about" class="screen">
+
+    <div class="test-header">
+
+        <button
+            class="back"
+            onclick="showScreen('home')">
+            ‹
+        </button>
+
+        <div class="test-title">
+            Sobre Ánimo
+        </div>
+
+    </div>
+
+
+    <div class="card about">
+
+        <h2>
+            Una pausa para observarte.
+        </h2>
+
+        <p>
+            Ánimo está pensado como una herramienta
+            sencilla para registrar periódicamente
+            cómo te sientes y observar cambios
+            a lo largo del tiempo.
+        </p>
+
+
+        <h3>
+            ¿Cómo funciona?
+        </h3>
+
+        <p>
+            Respondes nueve preguntas. Cada respuesta
+            recibe una puntuación de 0 a 3 y la suma
+            produce un resultado de 0 a 27.
+        </p>
+
+
+        <h3>
+            Privacidad
+        </h3>
+
+        <p>
+            En esta versión los resultados se almacenan
+            localmente en el navegador del dispositivo.
+            No necesitas crear una cuenta.
+        </p>
+
+
+        <h3>
+            ¿Puedo repetir el test?
+        </h3>
+
+        <p>
+            Sí. Puedes realizar hasta ocho mediciones
+            durante una misma sesión.
+        </p>
+
+
+        <h3>
+            Sobre los resultados
+        </h3>
+
+        <p>
+            Las categorías mostradas son orientativas
+            y no sustituyen una evaluación profesional.
+            Antes de publicar esta herramienta como
+            producto sanitario o utilizar una escala
+            clínica concreta, deben revisarse sus
+            derechos de uso, validación y requisitos
+            correspondientes.
+        </p>
+
+
+        <h3>
+            Si necesitas ayuda
+        </h3>
+
+        <p>
+            Si estás en una situación de peligro inmediato
+            o tienes pensamientos de hacerte daño, busca
+            ayuda de emergencia o contacta inmediatamente
+            con un servicio de atención de tu localidad.
+        </p>
+
+    </div>
+
+</section>
+
+</div>
+
+
+<!-- ================= NAV ================= -->
+
+<nav class="bottom-nav">
+
+    <button
+        id="navHome"
+        class="active"
+        onclick="showScreen('home')">
+
+        ⌂
+        <small>Inicio</small>
+
+    </button>
+
+
+    <button
+        id="navHistory"
+        onclick="showScreen('history')">
+
+        ◷
+        <small>Historial</small>
+
+    </button>
+
+
+    <button
+        id="navAbout"
+        onclick="showScreen('about')">
+
+        ⓘ
+        <small>Info</small>
+
+    </button>
+
+</nav>
+
+
+<script>
+
+/* =====================================================
+   ÁNIMO V3
+   Aplicación HTML autocontenida
+===================================================== */
+
+
+/* ================= QUESTIONS ================= */
+
+const questions = [
+
+"¿Te has sentido con poco interés o placer por hacer cosas?",
+
+"¿Te has sentido decaído/a, deprimido/a o sin esperanza?",
+
+"¿Has tenido dificultades para dormir, permanecer dormido/a o has dormido demasiado?",
+
+"¿Te has sentido cansado/a o con poca energía?",
+
+"¿Has tenido poco apetito o has comido más de lo habitual?",
+
+"¿Te has sentido mal contigo mismo/a, como si fueras un fracaso o hubieras quedado mal contigo o con tu familia?",
+
+"¿Has tenido dificultad para concentrarte, por ejemplo al leer o ver televisión?",
+
+"¿Has estado tan inquieto/a que te movías mucho más de lo habitual, o tan lento/a que otras personas podrían haberlo notado?",
+
+"¿Has pensado que estarías mejor muerto/a o has tenido pensamientos de hacerte daño?"
+
+];
+
+
+const answerLabels = [
+
+    "Nada",
+
+    "Varios días",
+
+    "Más de la mitad de los días",
+
+    "Casi todos los días"
+
+];
+
+
+/* ================= STATE ================= */
+
+let currentQuestion = 0;
+
+let currentAnswers = [];
+
+let currentScore = 0;
+
+let measurementNumber = 1;
+
+
+/* ================= NAVIGATION ================= */
+
+function showScreen(id){
+
+    document
+        .querySelectorAll(".screen")
+        .forEach(screen=>{
+            screen.classList.remove("active");
+        });
+
+    document
+        .getElementById(id)
+        .classList.add("active");
+
+
+    updateNavigation(id);
+
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
+
+
+    if(id === "history"){
+        renderHistory();
+    }
+}
+
+
+function updateNavigation(id){
+
+    document
+        .querySelectorAll(".bottom-nav button")
+        .forEach(btn=>{
+            btn.classList.remove("active");
+        });
+
+
+    if(id === "home"){
+        document
+            .getElementById("navHome")
+            .classList.add("active");
+    }
+
+    if(id === "history"){
+        document
+            .getElementById("navHistory")
+            .classList.add("active");
+    }
+
+    if(id === "about"){
+        document
+            .getElementById("navAbout")
+            .classList.add("active");
+    }
+}
+
+
+/* ================= START TEST ================= */
+
+function startTest(){
+
+    currentQuestion = 0;
+
+    currentAnswers = [];
+
+    measurementNumber = getSessionCount() + 1;
+
+    if(measurementNumber > 8){
+        measurementNumber = 8;
+    }
+
+    document
+        .getElementById("sessionNumber")
+        .textContent = measurementNumber;
+
+    renderQuestion();
+
+    showScreen("test");
+}
+
+
+/* ================= RENDER QUESTION ================= */
+
+function renderQuestion(){
+
+    const total = questions.length;
+
+    document
+        .getElementById("questionNumber")
+        .textContent =
+        "PREGUNTA " + (currentQuestion + 1);
+
+
+    document
+        .getElementById("progressText")
+        .textContent =
+        "Pregunta " +
+        (currentQuestion + 1) +
+        " de " +
+        total;
+
+
+    document
+        .getElementById("progressBar")
+        .style.width =
+        ((currentQuestion + 1) / total * 100) + "%";
+
+
+    document
+        .getElementById("questionText")
+        .textContent =
+        questions[currentQuestion];
+
+
+    const answers =
+        document.getElementById("answers");
+
+    answers.innerHTML = "";
+
+
+    answerLabels.forEach((label,index)=>{
+
+        const button =
+            document.createElement("button");
+
+        button.className = "answer";
+
+        button.textContent = label;
+
+        button.onclick = function(){
+
+            currentAnswers[currentQuestion] =
+                index;
+
+            if(
+                currentQuestion <
+                questions.length - 1
+            ){
+
+                currentQuestion++;
+
+                renderQuestion();
+
+            }else{
+
+                calculateResult();
+
+            }
+
+        };
+
+
+        answers.appendChild(button);
+
+    });
+
+}
+
+
+/* ================= RESULT ================= */
+
+function calculateResult(){
+
+    currentScore =
+        currentAnswers.reduce(
+            (total,value)=>{
+                return total + Number(value || 0);
+            },
+            0
+        );
+
+
+    let level = "";
+
+    let icon = "";
+
+    let message = "";
+
+
+    if(currentScore <= 4){
+
+        level = "Mínimo";
+
+        icon = "🌿";
+
+        message =
+            "Tus respuestas muestran pocos síntomas en este momento. Continúa observando cómo te sientes y cuidando tus hábitos de descanso, alimentación y bienestar.";
+
+    }
+
+    else if(currentScore <= 9){
+
+        level = "Leve";
+
+        icon = "🌱";
+
+        message =
+            "Tus respuestas muestran algunos síntomas. Puede ser útil observar si se mantienen, aumentan o empiezan a interferir con tus actividades.";
+
+    }
+
+    else if(currentScore <= 14){
+
+        level = "Moderado";
+
+        icon = "💛";
+
+        message =
+            "Tus respuestas muestran síntomas relevantes. Si persisten o afectan tu vida cotidiana, considera hablar con un profesional de salud.";
+
+    }
+
+    else{
+
+        level = "Moderadamente alto";
+
+        icon = "🫶";
+
+        message =
+            "Tus respuestas muestran una carga importante de síntomas. Considera buscar orientación profesional, especialmente si esto está afectando tu funcionamiento diario.";
+
+    }
+
+
+    document
+        .getElementById("score")
+        .textContent =
+        currentScore;
+
+
+    document
+        .getElementById("level")
+        .textContent =
+        level;
+
+
+    document
+        .getElementById("resultIcon")
+        .textContent =
+        icon;
+
+
+    document
+        .getElementById("resultText")
+        .textContent =
+        message;
+
+
+    document
+        .getElementById("saveButton")
+        .textContent =
+        "Guardar resultado";
+
+
+    showScreen("result");
+
+}
+
+
+/* ================= SAVE ================= */
+
+function getRecords(){
+
+    try{
+
+        return JSON.parse(
+            localStorage.getItem(
+                "animo_v3_records"
+            ) || "[]"
+        );
+
+    }catch(error){
+
+        return [];
+
+    }
+
+}
+
+
+function saveRecords(records){
+
+    localStorage.setItem(
+        "animo_v3_records",
+        JSON.stringify(records)
+    );
+
+}
+
+
+function saveResult(){
+
+    const records = getRecords();
+
+
+    records.push({
+
+        date:
+            new Date().toISOString(),
+
+        score:
+            currentScore,
+
+        measurement:
+            measurementNumber
+
+    });
+
+
+    saveRecords(records);
+
+
+    document
+        .getElementById("saveButton")
+        .textContent =
+        "✓ Resultado guardado";
+
+
+    setTimeout(()=>{
+
+        document
+            .getElementById("saveButton")
+            .textContent =
+            "Guardar resultado";
+
+    },1500);
+
+}
+
+
+/* ================= REPEAT ================= */
+
+function getSessionCount(){
+
+    const records = getRecords();
+
+    const today = new Date();
+
+    return records.filter(record=>{
+
+        const date =
+            new Date(record.date);
+
+        return (
+            date.getFullYear() ===
+            today.getFullYear() &&
+
+            date.getMonth() ===
+            today.getMonth() &&
+
+            date.getDate() ===
+            today.getDate()
+        );
+
+    }).length;
+
+}
+
+
+function newMeasurement(){
+
+    const count =
+        getSessionCount();
+
+
+    if(count >= 8){
+
+        alert(
+            "Ya alcanzaste las 8 mediciones permitidas para hoy."
+        );
+
+        return;
+
+    }
+
+
+    currentQuestion = 0;
+
+    currentAnswers = [];
+
+    measurementNumber =
+        count + 1;
+
+
+    document
+        .getElementById("sessionNumber")
+        .textContent =
+        measurementNumber;
+
+
+    renderQuestion();
+
+    showScreen("test");
+
+}
+
+
+/* ================= HISTORY ================= */
+
+function renderHistory(){
+
+    const records =
+        getRecords();
+
+
+    const count =
+        records.length;
+
+
+    document
+        .getElementById("historyCount")
+        .textContent =
+        count +
+        (count === 1
+            ? " registro"
+            : " registros");
+
+
+    const container =
+        document.getElementById("records");
+
+
+    container.innerHTML = "";
+
+
+    const ordered =
+        records
+            .slice()
+            .sort(
+                (a,b)=>
+                new Date(b.date) -
+                new Date(a.date)
+            );
+
+
+    ordered.forEach(record=>{
+
+        const date =
+            new Date(record.date);
+
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "card record";
+
+
+        const left =
+            document.createElement("div");
+
+
+        const dateElement =
+            document.createElement("div");
+
+        dateElement.className =
+            "record-date";
+
+        dateElement.textContent =
+            date.toLocaleDateString(
+                "es-CO",
+                {
+                    day:"2-digit",
+                    month:"short",
+                    year:"numeric"
+                }
+            );
+
+
+        const time =
+            document.createElement("div");
+
+        time.className =
+            "record-time";
+
+        time.textContent =
+            date.toLocaleTimeString(
+                "es-CO",
+                {
+                    hour:"2-digit",
+                    minute:"2-digit"
+                }
+            );
+
+
+        left.appendChild(dateElement);
+
+        left.appendChild(time);
+
+
+        const score =
+            document.createElement("div");
+
+        score.className =
+            "record-score";
+
+        score.textContent =
+            record.score + "/27";
+
+
+        card.appendChild(left);
+
+        card.appendChild(score);
+
+        container.appendChild(card);
+
+    });
+
+
+    drawChart(records);
+
+}
+
+
+/* ================= CHART ================= */
+
+function drawChart(records){
+
+    const canvas =
+        document.getElementById("chart");
+
+    const empty =
+        document.getElementById("emptyChart");
+
+
+    if(records.length < 2){
+
+        canvas.style.display = "none";
+
+        empty.style.display = "block";
+
+        return;
+
+    }
+
+
+    canvas.style.display = "block";
+
+    empty.style.display = "none";
+
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    const dpr =
+        window.devicePixelRatio || 1;
+
+
+    canvas.width =
+        rect.width * dpr;
+
+    canvas.height =
+        250 * dpr;
+
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    const data =
+        records
+            .slice()
+            .sort(
+                (a,b)=>
+                new Date(a.date) -
+                new Date(b.date)
+            );
+
+
+    const width =
+        canvas.width;
+
+    const height =
+        canvas.height;
+
+
+    const padding =
+        35 * dpr;
+
+
+    const max =
+        27;
+
+
+    /* GRID */
+
+    ctx.strokeStyle =
+        "#E5E7EF";
+
+    ctx.lineWidth =
+        1 * dpr;
+
+
+    [0,9,18,27].forEach(value=>{
+
+        const y =
+            height -
+            padding -
+            ((value / max) *
+            (height - padding * 2));
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            padding,
+            y
+        );
+
+        ctx.lineTo(
+            width - padding,
+            y
+        );
+
+        ctx.stroke();
+
+    });
+
+
+    /* LINE */
+
+    ctx.beginPath();
+
+
+    data.forEach((record,index)=>{
+
+        const x =
+            padding +
+            (
+                index /
+                Math.max(
+                    1,
+                    data.length - 1
+                )
+            ) *
+            (
+                width -
+                padding * 2
+            );
+
+
+        const y =
+            height -
+            padding -
+            (
+                record.score /
+                max
+            ) *
+            (
+                height -
+                padding * 2
+            );
+
+
+        if(index === 0){
+
+            ctx.moveTo(x,y);
+
+        }else{
+
+            ctx.lineTo(x,y);
+
+        }
+
+    });
+
+
+    ctx.strokeStyle =
+        "#5668D8";
+
+    ctx.lineWidth =
+        3 * dpr;
+
+    ctx.stroke();
+
+
+    /* POINTS */
+
+    data.forEach((record,index)=>{
+
+        const x =
+            padding +
+            (
+                index /
+                Math.max(
+                    1,
+                    data.length - 1
+                )
+            ) *
+            (
+                width -
+                padding * 2
+            );
+
+
+        const y =
+            height -
+            padding -
+            (
+                record.score /
+                max
+            ) *
+            (
+                height -
+                padding * 2
+            );
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            y,
+            5*dpr,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle =
+            "#5668D8";
+
+        ctx.fill();
+
+    });
+
+}
+
+
+/* ================= EXPORT ================= */
+
+function exportData(){
+
+    const records =
+        getRecords();
+
+
+    if(records.length === 0){
+
+        alert(
+            "Todavía no tienes registros para exportar."
+        );
+
+        return;
+
+    }
+
+
+    const data = {
+
+        app:"Ánimo V3",
+
+        exportedAt:
+            new Date().toISOString(),
+
+        records:records
+
+    };
+
+
+    const blob =
+        new Blob(
+            [
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                )
+            ],
+            {
+                type:
+                    "application/json"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+
+    link.href = url;
+
+    link.download =
+        "animo-historial.json";
+
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+
+    setTimeout(
+        ()=>URL.revokeObjectURL(url),
+        1000
+    );
+
+}
+
+
+/* ================= DELETE ================= */
+
+function clearHistory(){
+
+    const records =
+        getRecords();
+
+
+    if(records.length === 0){
+
+        alert(
+            "No tienes registros guardados."
+        );
+
+        return;
+
+    }
+
+
+    const confirmation =
+        confirm(
+            "¿Seguro que quieres borrar todo tu historial? Esta acción no se puede deshacer."
+        );
+
+
+    if(!confirmation){
+
+        return;
+
+    }
+
+
+    localStorage.removeItem(
+        "animo_v3_records"
+    );
+
+
+    renderHistory();
+
+}
+
+
+/* ================= RESIZE ================= */
+
+window.addEventListener(
+    "resize",
+    ()=>{
+        if(
+            document
+                .getElementById("history")
+                .classList
+                .contains("active")
+        ){
+            renderHistory();
+        }
+    }
+);
+
+
+/* ================= INIT ================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    ()=>{
+        renderHistory();
+    }
+);
+
+</script>
+
+</body>
+</html>
+```

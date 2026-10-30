@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Ánimo">
 <title>Ánimo — Estado emocional</title>
 
-<!-- Conexión PWA -->
+<!-- ENLACE AL MANIFEST PARA PWA -->
 <link rel="manifest" href="./manifest.json">
 
 <style>
@@ -1247,7 +1247,7 @@ const modules = [
       "Desanimado o desesperanzado",
       "Autoestima baja",
       "Sensación de no valer o de ser inadecuado",
-      "Pérdida de placer o de satisfacción con la vida"
+      "Pérdida de pleasure o de satisfacción con la vida"
     ]
   },
   {
@@ -1367,8 +1367,12 @@ function renderQuestion(){
   const total=questions.length;
   const percent=Math.round(((currentQuestion+1)/total)*100);
 
-  document.getElementById("progressText").textContent = `Pregunta ${currentQuestion+1} de ${total}`; document.getElementById("progressPercent").textContent = `${percent}%`;
-  document.getElementById("progressBar").style.width = `${percent}\%`; document.getElementById("moduleLabel").textContent = `${q.icon} ${q.moduleName}`; document.getElementById("questionText").textContent = q.text; document.getElementById("questionNumber").textContent = `Ítem ${q.index}`;
+  document.getElementById("progressText").textContent = `Pregunta ${currentQuestion+1} de ${total}`;
+  document.getElementById("progressPercent").textContent = `${percent}%`;
+  document.getElementById("progressBar").style.width = `${percent}%`;
+  document.getElementById("moduleLabel").textContent = `${q.icon} ${q.moduleName}`;
+  document.getElementById("questionText").textContent = q.text;
+  document.getElementById("questionNumber").textContent = `Ítem ${q.index}`;
 
   const optionsContainer=document.getElementById("options");
   optionsContainer.innerHTML="";
@@ -1390,10 +1394,8 @@ function renderQuestion(){
       vibrate(30);
       answers[currentQuestion]=option.value;
       
-      // Re-render para mostrar la opción seleccionada inmediatamente
       renderQuestion();
 
-      // Auto-avance fluido
       setTimeout(() => {
         if (currentQuestion < questions.length - 1) {
           currentQuestion++;
@@ -1577,7 +1579,6 @@ function renderAreas(result){
     `;
     container.appendChild(div);
 
-    // Animación de barra progresiva
     requestAnimationFrame(() => {
       setTimeout(() => {
         div.querySelector('.area-fill').style.width = `${percent}%`;
@@ -1609,4 +1610,451 @@ function renderSmartAnalysis(result){
     areas.forEach(([name,key])=>{
       const d=result.scores[key]-previous.scores[key];
       if(Math.abs(d)>=2){
-        html+=`<div class="insight"><strong>${d<0?"↘️":"↗️"} ${name}</strong>${d
+        html+=`<div class="insight"><strong>${d<0?"↘️":"↗️"} ${name}</strong> ${d<0 ? `Esta área disminuyó ${Math.abs(d)} puntos respecto a tu medición anterior.` : `Esta área aumentó ${d} puntos respecto a tu medición anterior.`}</div>`;
+      }
+    });
+  }
+
+  const areas=[
+    {name:"ansiedad emocional", score:result.scores.anxiety, max:20},
+    {name:"síntomas físicos", score:result.scores.physical, max:40},
+    {name:"depresión", score:result.scores.depression, max:20}
+  ];
+
+  areas.forEach(a=>{ a.percent=a.score/a.max; });
+  areas.sort((a,b)=>b.percent-a.percent);
+  const strongest=areas[0];
+
+  if(strongest.percent>=.45){
+    html+=`<div class="insight"><strong>🔎 Área que más destaca</strong> En esta medición, los <b>${strongest.name}</b> representan la mayor proporción de tus puntuaciones. Esto no significa que exista un diagnóstico; simplemente indica dónde se concentraron más tus respuestas hoy.</div>`;
+  }
+
+  if(result.scores.physical>=11 && result.scores.anxiety>=9){
+    html+=`<div class="insight"><strong>🫀 Conexión emocional-física</strong> Tus respuestas muestran una presencia importante tanto de ansiedad emocional como de síntomas físicos. Puede ser útil observar cuándo aparecen estas sensaciones, qué estaba ocurriendo antes y cómo cambian posteriormente.</div>`;
+  }
+
+  if(result.scores.depression>=9){
+    html+=`<div class="insight"><strong>🌧️ Estado de ánimo</strong> Tus respuestas muestran varios indicadores relacionados con el estado de ánimo bajo. Si esto persiste o está afectando tu funcionamiento diario, considera hablar con un profesional.</div>`;
+  }
+  box.innerHTML=html;
+}
+
+
+/* ================= SEGURIDAD ================= */
+
+function renderSafety(result){
+  const box=document.getElementById("safetyBox");
+  if(result.scores.safety>0){
+    box.innerHTML=`
+      <div class="safety">
+        <h3>🆘 Tu seguridad es lo primero</h3>
+        <p>Una de tus respuestas indica presencia de pensamientos relacionados con el suicidio o con poner fin a tu vida.</p>
+        <p>Por favor, no afrontes esto a solas. Busca ahora mismo a una persona de confianza y solicita apoyo profesional. Si existe riesgo inmediato de hacerte daño, contacta los servicios de emergencia de tu país o acude al servicio de urgencias más cercano.</p>
+        <button class="btn btn-primary" onclick="showToast('Busca compañía de una persona de confianza o llama a emergencias.')">Necesito ayuda ahora</button>
+      </div>
+    `;
+  }else{
+    box.innerHTML="";
+  }
+}
+
+
+/* ================= STORAGE ================= */
+
+function getHistory(){
+  try{ return JSON.parse(localStorage.getItem("animo_history") || "[]"); }
+  catch(e){ return []; }
+}
+
+function saveResult(result){
+  const history=getHistory();
+  history.push(result);
+  localStorage.setItem("animo_history", JSON.stringify(history));
+}
+
+function clearHistory(){
+  if(!confirm("¿Seguro que quieres eliminar todo tu historial? Esta acción no se puede deshacer.")){ return; }
+  localStorage.removeItem("animo_history");
+  updateHome();
+  renderHistory();
+  renderEvolution();
+  showToast("Historial eliminado correctamente");
+}
+
+
+/* ================= HOME ================= */
+
+function updateHome(){
+  const history=getHistory();
+  document.getElementById("homeCount").textContent = history.length;
+
+  if(history.length===0){
+    document.getElementById("homeLast").textContent="—";
+    document.getElementById("homeAverage").textContent="—";
+    document.getElementById("homeTrend").textContent="—";
+    return;
+  }
+
+  const last=history[history.length-1];
+  document.getElementById("homeLast").textContent = last.total;
+  const average = history.reduce((sum,x)=>sum+x.total,0) / history.length;
+  document.getElementById("homeAverage").textContent = average.toFixed(1);
+
+  if(history.length<2){
+    document.getElementById("homeTrend").textContent="—";
+  }else{
+    const prev=history[history.length-2];
+    const diff=last.total-prev.total;
+    document.getElementById("homeTrend").textContent = diff<0 ? "↘ Mejor" : diff>0 ? "↗ Subió" : "→ Igual";
+  }
+}
+
+
+/* ================= HISTORIAL ================= */
+
+function renderHistory(){
+  const history=getHistory();
+  const container=document.getElementById("historyList");
+
+  if(history.length===0){
+    container.innerHTML=`
+      <div class="card empty">
+        <div class="empty-icon">🌱</div>
+        <strong>Aún no tienes mediciones</strong>
+        <p>Cuando completes tu primera medición, aparecerá aquí.</p>
+        <button class="btn btn-primary" onclick="startTest()">Hacer primera medición</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML="";
+  [...history].reverse().forEach(result=>{
+    const date=new Date(result.date);
+    const formatted=date.toLocaleDateString("es-CO", {day:"numeric", month:"long", year:"numeric"});
+    const div=document.createElement("div");
+    div.className="history-item";
+
+    div.innerHTML=`
+      <div class="history-top">
+        <div class="history-date">${formatted}</div>
+        <div class="history-total">${result.total}</div>
+      </div>
+      <div class="mini-bars">
+        ${miniBar("Ansiedad", result.scores.anxiety, 20)}
+        ${miniBar("Física", result.scores.physical, 40)}
+        ${miniBar("Depresión", result.scores.depression, 20)}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function miniBar(name,value,max){
+  const width=Math.min(100,(value/max)*100);
+  return`
+    <div class="mini">
+      ${name} · ${value}
+      <div class="mini-track">
+        <div class="mini-fill" style="width:${width}%;background:#315d7c"></div>
+      </div>
+    </div>
+  `;
+}
+
+
+/* ================= EVOLUCIÓN ================= */
+
+function changePeriod(days,button){
+  currentPeriod=days;
+  document.querySelectorAll(".period").forEach(b=>{ b.classList.remove("active"); });
+  button.classList.add("active");
+  renderEvolution();
+}
+
+function getFilteredHistory(){
+  const history=getHistory();
+  if(currentPeriod===9999) return history;
+  const cutoff = Date.now() - currentPeriod*24*60*60*1000;
+  return history.filter(x=> new Date(x.date).getTime()>=cutoff);
+}
+
+function renderEvolution(){
+  const history=getFilteredHistory();
+  const all=getHistory();
+
+  if(all.length===0){
+    document.getElementById("trendNumber").textContent="—";
+    document.getElementById("trendDescription").textContent="Realiza al menos dos mediciones para empezar a observar una tendencia.";
+    document.getElementById("evoLast").textContent="—";
+    document.getElementById("evoAverage").textContent="—";
+    document.getElementById("evoBest").textContent="—";
+    document.getElementById("evoWorst").textContent="—";
+
+    drawEmptyChart("mainChart","Aún no hay datos");
+    drawEmptyChart("areasChart","Aún no hay datos");
+    document.getElementById("evolutionInsight").innerHTML=`<div class="insight">Realiza algunas mediciones para que Ánimo pueda analizar tu evolución.</div>`;
+    return;
+  }
+
+  const values=history.map(x=>x.total);
+  const last=values[values.length-1];
+  const average = values.reduce((a,b)=>a+b,0)/values.length;
+  const best=Math.min(...values);
+  const worst=Math.max(...values);
+
+  document.getElementById("evoLast").textContent=last;
+  document.getElementById("evoAverage").textContent=average.toFixed(1);
+  document.getElementById("evoBest").textContent=best;
+  document.getElementById("evoWorst").textContent=worst;
+
+  if(history.length>=2){
+    const first=history[0].total;
+    const diff=last-first;
+    const percent = first===0 ? 0 : Math.round((diff/first)*100);
+    const trend=document.getElementById("trendNumber");
+
+    trend.textContent = diff===0 ? "→ 0%" : diff<0 ? `↘ ${Math.abs(percent)}%` : `↗ ${percent}%`;
+    trend.className = "trend-number " + (diff<0 ? "trend-down" : diff>0 ? "trend-up" : "trend-flat");
+    document.getElementById("trendDescription").textContent = diff<0 ? "Tu puntuación general ha disminuido desde el inicio de este período." : diff>0 ? "Tu puntuación general ha aumentado desde el inicio de este período." : "Tu puntuación general se mantiene estable.";
+  }else{
+    document.getElementById("trendNumber").textContent="—";
+    document.getElementById("trendDescription").textContent="Necesitas al menos dos mediciones para calcular una tendencia.";
+  }
+
+  drawMainChart(history);
+  drawAreasChart(history);
+  renderEvolutionInsight(history);
+}
+
+function renderEvolutionInsight(history){
+  const box=document.getElementById("evolutionInsight");
+
+  if(history.length<2){
+    box.innerHTML=`<div class="insight"><strong>🌱 Estamos empezando</strong> Con una segunda medición podremos comenzar a comparar tus resultados.</div>`;
+    return;
+  }
+
+  const first=history[0];
+  const last=history[history.length-1];
+  let html="";
+  const diff=last.total-first.total;
+
+  if(diff<0){
+    html+=`<div class="insight"><strong>↘️ Cambio favorable</strong> Tu puntuación general ha disminuido ${Math.abs(diff)} puntos desde la primera medición de este período.</div>`;
+  }else if(diff>0){
+    html+=`<div class="insight"><strong>↗️ Cambio a observar</strong> Tu puntuación general ha aumentado ${diff} puntos desde la primera medición de este período.</div>`;
+  }else{
+    html+=`<div class="insight"><strong>→ Estabilidad</strong> Tu puntuación general se encuentra prácticamente en el mismo nivel que al comienzo.</div>`;
+  }
+
+  const keys=[["Ansiedad emocional","anxiety"], ["Síntomas físicos","physical"], ["Depresión","depression"]];
+  keys.forEach(([name,key])=>{
+    const d=last.scores[key]-first.scores[key];
+    if(Math.abs(d)>=2){
+      html+=`<div class="insight"><strong>${d<0?"↘️":"↗️"} ${name}</strong> Esta área ${d<0?"disminuyó":"aumentó"} ${Math.abs(d)} puntos durante el período seleccionado.</div>`;
+    }
+  });
+
+  box.innerHTML=html;
+}
+
+
+/* ================= CANVAS ================= */
+
+function setupCanvas(canvas){
+  const rect=canvas.getBoundingClientRect();
+  const ratio=window.devicePixelRatio || 1;
+  canvas.width=rect.width*ratio;
+  canvas.height=rect.height*ratio;
+  const ctx=canvas.getContext("2d");
+  ctx.scale(ratio,ratio);
+  return {ctx, width:rect.width, height:rect.height};
+}
+
+function drawEmptyChart(id,text){
+  const canvas=document.getElementById(id);
+  const {ctx,width,height}=setupCanvas(canvas);
+  ctx.clearRect(0,0,width,height);
+  ctx.fillStyle="#687386";
+  ctx.font="13px -apple-system, sans-serif";
+  ctx.textAlign="center";
+  ctx.fillText(text, width/2, height/2);
+}
+
+function drawMainChart(history){
+  const canvas=document.getElementById("mainChart");
+  const {ctx,width,height}=setupCanvas(canvas);
+  ctx.clearRect(0,0,width,height);
+
+  if(history.length===0){
+    drawEmptyChart("mainChart","Aún no hay datos");
+    return;
+  }
+
+  const padding={left:10, right:10, top:15, bottom:25};
+  const chartW=width-padding.left-padding.right;
+  const chartH=height-padding.top-padding.bottom;
+  const maxValue=88;
+
+  ctx.strokeStyle="#e9edf0";
+  ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=padding.top+chartH*(i/4);
+    ctx.beginPath();
+    ctx.moveTo(padding.left,y);
+    ctx.lineTo(width-padding.right,y);
+    ctx.stroke();
+  }
+
+  const points=history.map((item,index)=>{
+    const x=padding.left+(history.length===1 ? chartW/2 : chartW*(index/(history.length-1)));
+    const y=padding.top+chartH-(item.total/maxValue)*chartH;
+    return {x,y,value:item.total};
+  });
+
+  if(points.length>1){
+    ctx.beginPath();
+    points.forEach((p,i)=>{
+      if(i===0) ctx.moveTo(p.x,p.y);
+      else ctx.lineTo(p.x,p.y);
+    });
+    ctx.strokeStyle="#315d7c";
+    ctx.lineWidth=3;
+    ctx.lineJoin="round";
+    ctx.lineCap="round";
+    ctx.stroke();
+  }
+
+  points.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,5,0,Math.PI*2);
+    ctx.fillStyle="#315d7c";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,2,0,Math.PI*2);
+    ctx.fillStyle="#fff";
+    ctx.fill();
+  });
+
+  ctx.fillStyle="#687386";
+  ctx.font="10px -apple-system, sans-serif";
+  ctx.textAlign="left";
+
+  points.forEach((p,i)=>{
+    if(i===0 || i===points.length-1 || points.length<6){
+      const date=new Date(history[i].date);
+      const label=date.toLocaleDateString("es-CO", {day:"numeric", month:"short"});
+      ctx.fillText(label, p.x, height-7);
+    }
+  });
+}
+
+function drawAreasChart(history){
+  const canvas=document.getElementById("areasChart");
+  const {ctx,width,height}=setupCanvas(canvas);
+  ctx.clearRect(0,0,width,height);
+
+  if(history.length===0){
+    drawEmptyChart("areasChart","Aún no hay datos");
+    return;
+  }
+
+  const last=history[history.length-1];
+  const areas=[
+    {name:"Ansiedad", value:last.scores.anxiety, max:20},
+    {name:"Física", value:last.scores.physical, max:40},
+    {name:"Depresión", value:last.scores.depression, max:20}
+  ];
+
+  const barWidth=Math.min(75,width/(areas.length*2));
+  const gap=width/areas.length;
+
+  areas.forEach((area,index)=>{
+    const x=gap*index+gap/2-barWidth/2;
+    const maxHeight=145;
+    const barHeight=(area.value/area.max)*maxHeight;
+    const y=height-38-barHeight;
+
+    ctx.fillStyle="#315d7c";
+    ctx.beginPath();
+    if(ctx.roundRect){
+      ctx.roundRect(x,y,barWidth,barHeight,10);
+    }else{
+      ctx.rect(x,y,barWidth,barHeight);
+    }
+    ctx.fill();
+
+    ctx.fillStyle="#172033";
+    ctx.font="bold 12px -apple-system, sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(area.value, x+barWidth/2, y-8);
+
+    ctx.fillStyle="#687386";
+    ctx.font="11px -apple-system, sans-serif";
+    ctx.fillText(area.name, x+barWidth/2, height-17);
+  });
+}
+
+
+/* ================= EXPORTAR ================= */
+
+function exportData(){
+  const history=getHistory();
+  if(history.length===0){
+    showToast("No tienes mediciones para exportar.");
+    return;
+  }
+
+  const data={
+    app:"Ánimo",
+    version:"4.0",
+    exportedAt:new Date().toISOString(),
+    measurements:history
+  };
+
+  const blob=new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`animo-datos-${new Date().toISOString().slice(0,10)}.json`;
+  
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  
+  showToast("Archivo exportado exitosamente");
+}
+
+
+/* ================= INICIALIZACIÓN ================= */
+
+buildQuestions();
+updateHome();
+renderHistory();
+renderEvolution();
+
+
+/* ================= REDIMENSIONAR GRÁFICOS ================= */
+
+window.addEventListener("resize", ()=>{
+  if(document.getElementById("evolution").classList.contains("active")){
+    renderEvolution();
+  }
+});
+
+
+/* ================= PWA SETUP ================= */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('App lista para uso offline.', reg.scope))
+      .catch(err => console.log('Error registrando PWA:', err));
+  });
+}
+
+</script>
+
+</body>
+</html>

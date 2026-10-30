@@ -47,6 +47,7 @@ button,input{
 
 button{
   cursor:pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .app{
@@ -681,6 +682,29 @@ canvas{
   margin-bottom:10px;
 }
 
+/* TOAST NOTIFICATIONS */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #172033;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  pointer-events: none;
+}
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
 /* RESPONSIVE */
 @media(min-width:600px){
   .content{
@@ -1156,14 +1180,32 @@ canvas{
 
 /* =========================================================
    ÁNIMO V4
-   Motor local de autoobservación
+   Motor local de autoobservación interactivo
 ========================================================= */
+
+/* ================= HELPER FUNCTIONS ================= */
+function vibrate(ms) {
+  if (navigator.vibrate) {
+    navigator.vibrate(ms);
+  }
+}
+
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast show";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
 
 
 /* ================= DATOS DEL TEST ================= */
 
 const modules = [
-
   {
     id:"anxiety",
     name:"Ansiedad emocional",
@@ -1176,7 +1218,6 @@ const modules = [
       "Tenso o con los nervios de punta"
     ]
   },
-
   {
     id:"physical",
     name:"Síntomas físicos de ansiedad",
@@ -1194,7 +1235,6 @@ const modules = [
       "Sensación de insensibilidad o de hormigueos"
     ]
   },
-
   {
     id:"depression",
     name:"Depresión",
@@ -1207,7 +1247,6 @@ const modules = [
       "Pérdida de placer o de satisfacción con la vida"
     ]
   },
-
   {
     id:"safety",
     name:"Seguridad emocional",
@@ -1218,7 +1257,6 @@ const modules = [
       "¿Quisiera poner fin a su vida?"
     ]
   }
-
 ];
 
 
@@ -1241,13 +1279,9 @@ let currentPeriod = 7;
 /* ================= CONSTRUIR PREGUNTAS ================= */
 
 function buildQuestions(){
-
   questions=[];
-
   modules.forEach(module=>{
-
     module.questions.forEach((question,index)=>{
-
       questions.push({
         moduleId:module.id,
         moduleName:module.name,
@@ -1256,18 +1290,15 @@ function buildQuestions(){
         index:index+1,
         text:question
       });
-
     });
-
   });
-
 }
 
 
 /* ================= NAVEGACIÓN ================= */
 
 function showSection(id){
-
+  vibrate(15);
   document.querySelectorAll(".section").forEach(section=>{
     section.classList.remove("active");
   });
@@ -1307,67 +1338,44 @@ function showSection(id){
 /* ================= TEST ================= */
 
 function startTest(){
-
+  vibrate(20);
   buildQuestions();
-
   answers=new Array(questions.length).fill(null);
   currentQuestion=0;
-
   showSection("test");
-
   renderQuestion();
 }
 
 
 function cancelTest(){
-
+  vibrate(15);
   if(
     answers.some(x=>x!==null) &&
     !confirm("¿Quieres salir? Las respuestas de esta medición se perderán.")
   ){
     return;
   }
-
   showSection("home");
 }
 
 
 function renderQuestion(){
-
   const q=questions[currentQuestion];
-
   const total=questions.length;
+  const percent=Math.round(((currentQuestion+1)/total)*100);
 
-  const percent=Math.round(
-    ((currentQuestion+1)/total)*100
-  );
-
-  document.getElementById("progressText").textContent =
-    `Pregunta ${currentQuestion+1} de ${total}`;
-
-  document.getElementById("progressPercent").textContent =
-    `${percent}%`;
-
-  document.getElementById("progressBar").style.width =
-    `${percent}%`;
-
-  document.getElementById("moduleLabel").textContent =
-    `${q.icon} ${q.moduleName}`;
-
-  document.getElementById("questionText").textContent =
-    q.text;
-
-  document.getElementById("questionNumber").textContent =
-    `Ítem ${q.index}`;
+  document.getElementById("progressText").textContent = `Pregunta ${currentQuestion+1} de ${total}`;
+  document.getElementById("progressPercent").textContent = `${percent}%`;
+  document.getElementById("progressBar").style.width = `${percent}%`;
+  document.getElementById("moduleLabel").textContent = `${q.icon} ${q.moduleName}`;
+  document.getElementById("questionText").textContent = q.text;
+  document.getElementById("questionNumber").textContent = `Ítem ${q.index}`;
 
   const optionsContainer=document.getElementById("options");
-
   optionsContainer.innerHTML="";
 
   options.forEach(option=>{
-
     const button=document.createElement("button");
-
     button.className="option";
 
     if(answers[currentQuestion]===option.value){
@@ -1380,177 +1388,117 @@ function renderQuestion(){
     `;
 
     button.onclick=()=>{
-
+      vibrate(30);
       answers[currentQuestion]=option.value;
-
+      
+      // Re-render para mostrar la opción seleccionada inmediatamente
       renderQuestion();
 
+      // Auto-avance fluido
+      setTimeout(() => {
+        if (currentQuestion < questions.length - 1) {
+          currentQuestion++;
+          renderQuestion();
+        } else {
+          finishTest();
+        }
+      }, 350);
     };
 
     optionsContainer.appendChild(button);
-
   });
 
-  document.getElementById("prevBtn").disabled =
-    currentQuestion===0;
-
-  document.getElementById("prevBtn").style.opacity =
-    currentQuestion===0 ? ".45" : "1";
-
-  document.getElementById("nextBtn").textContent =
-    currentQuestion===total-1
-      ? "Finalizar ✓"
-      : "Siguiente →";
-
+  document.getElementById("prevBtn").disabled = currentQuestion===0;
+  document.getElementById("prevBtn").style.opacity = currentQuestion===0 ? ".45" : "1";
+  document.getElementById("nextBtn").textContent = currentQuestion===total-1 ? "Finalizar ✓" : "Siguiente →";
 }
 
 
 function nextQuestion(){
-
+  vibrate(15);
   if(answers[currentQuestion]===null){
-
-    alert("Por favor, selecciona una respuesta antes de continuar.");
-
+    showToast("Por favor, selecciona una respuesta antes de continuar.");
     return;
   }
 
   if(currentQuestion < questions.length-1){
-
     currentQuestion++;
-
     renderQuestion();
-
   }else{
-
     finishTest();
-
   }
-
 }
 
 
 function previousQuestion(){
-
+  vibrate(15);
   if(currentQuestion>0){
-
     currentQuestion--;
-
     renderQuestion();
-
   }
-
 }
 
 
 /* ================= RESULTADOS ================= */
 
 function getModuleScore(id){
-
   let total=0;
-
   questions.forEach((q,index)=>{
-
     if(q.moduleId===id && answers[index]!==null){
       total+=answers[index];
     }
-
   });
-
   return total;
 }
 
 
 function getCurrentScores(){
-
   return {
     anxiety:getModuleScore("anxiety"),
     physical:getModuleScore("physical"),
     depression:getModuleScore("depression"),
     safety:getModuleScore("safety")
   };
-
 }
 
 
 function totalScore(scores){
-
-  return (
-    scores.anxiety+
-    scores.physical+
-    scores.depression+
-    scores.safety
-  );
-
+  return (scores.anxiety+scores.physical+scores.depression+scores.safety);
 }
 
 
 function levelForAnxiety(score){
-
-  if(score<=1)
-    return ["Pocos síntomas","green"];
-
-  if(score<=4)
-    return ["Ansiedad marginal","yellow"];
-
-  if(score<=8)
-    return ["Ansiedad leve","yellow"];
-
-  if(score<=12)
-    return ["Ansiedad moderada","orange"];
-
-  if(score<=16)
-    return ["Ansiedad grave","red"];
-
+  if(score<=1) return ["Pocos síntomas","green"];
+  if(score<=4) return ["Ansiedad marginal","yellow"];
+  if(score<=8) return ["Ansiedad leve","yellow"];
+  if(score<=12) return ["Ansiedad moderada","orange"];
+  if(score<=16) return ["Ansiedad grave","red"];
   return ["Ansiedad extrema","red"];
 }
 
 
 function levelForPhysical(score){
-
-  if(score<=2)
-    return ["Pocos síntomas físicos","green"];
-
-  if(score<=6)
-    return ["Algunos síntomas físicos","yellow"];
-
-  if(score<=10)
-    return ["Síntomas físicos leves","yellow"];
-
-  if(score<=20)
-    return ["Síntomas físicos moderados","orange"];
-
-  if(score<=30)
-    return ["Síntomas físicos fuertes","red"];
-
+  if(score<=2) return ["Pocos síntomas físicos","green"];
+  if(score<=6) return ["Algunos síntomas físicos","yellow"];
+  if(score<=10) return ["Síntomas físicos leves","yellow"];
+  if(score<=20) return ["Síntomas físicos moderados","orange"];
+  if(score<=30) return ["Síntomas físicos fuertes","red"];
   return ["Síntomas físicos extremos","red"];
 }
 
 
 function levelForDepression(score){
-
-  if(score<=1)
-    return ["Pocos síntomas","green"];
-
-  if(score<=4)
-    return ["Depresión marginal","yellow"];
-
-  if(score<=8)
-    return ["Depresión leve","yellow"];
-
-  if(score<=12)
-    return ["Depresión moderada","orange"];
-
-  if(score<=16)
-    return ["Depresión grave","red"];
-
+  if(score<=1) return ["Pocos síntomas","green"];
+  if(score<=4) return ["Depresión marginal","yellow"];
+  if(score<=8) return ["Depresión leve","yellow"];
+  if(score<=12) return ["Depresión moderada","orange"];
+  if(score<=16) return ["Depresión grave","red"];
   return ["Depresión extrema","red"];
 }
 
 
 function finishTest(){
-
   const scores=getCurrentScores();
-
   const result={
     id:Date.now(),
     date:new Date().toISOString(),
@@ -1559,944 +1507,384 @@ function finishTest(){
   };
 
   saveResult(result);
-
   currentResult=result;
-
   showResult(result);
-
 }
 
 
 function showResult(result){
-
   showSection("result");
-
-  document.getElementById("resultTotal").textContent =
-    result.total;
+  document.getElementById("resultTotal").textContent = result.total;
 
   let title="Estado emocional registrado";
   let description="Esta medición representa cómo respondiste en este momento.";
 
   if(result.scores.safety>0){
-
     title="Necesitamos detenernos un momento";
-
-    description=
-      "Tus respuestas en la sección de seguridad requieren atención. " +
-      "No debes afrontar esto a solas.";
-
+    description="Tus respuestas en la sección de seguridad requieren atención. No debes afrontar esto a solas.";
   }else if(result.total<=10){
-
     title="Tu puntuación es baja";
-
-    description=
-      "En esta medición aparecen pocos indicadores de malestar emocional.";
-
+    description="En esta medición aparecen pocos indicadores de malestar emocional.";
   }else if(result.total<=25){
-
     title="Hay algunas señales para observar";
-
-    description=
-      "Tu medición muestra algunos síntomas. Observar cómo evolucionan puede ser útil.";
-
+    description="Tu medición muestra algunos síntomas. Observar cómo evolucionan puede ser útil.";
   }else if(result.total<=40){
-
     title="Hay señales que merecen atención";
-
-    description=
-      "Tus respuestas muestran un nivel importante de malestar en una o más áreas.";
-
+    description="Tus respuestas muestran un nivel importante de malestar en una o más áreas.";
   }else{
-
     title="Tu malestar parece elevado";
-
-    description=
-      "Tus respuestas muestran puntuaciones elevadas en una o más áreas. " +
-      "Considera buscar apoyo profesional, especialmente si esto está afectando tu vida cotidiana.";
-
+    description="Tus respuestas muestran puntuaciones elevadas en una o más áreas. Considera buscar apoyo profesional, especialmente si esto está afectando tu vida cotidiana.";
   }
 
   document.getElementById("resultTitle").textContent=title;
-
   document.getElementById("resultDescription").textContent=description;
 
   renderAreas(result);
-
   renderSmartAnalysis(result);
-
   renderSafety(result);
-
 }
 
 
-/* ================= ÁREAS ================= */
+/* ================= ÁREAS (Con animación) ================= */
 
 function renderAreas(result){
-
   const container=document.getElementById("areaResults");
 
   const data=[
-
-    {
-      name:"Ansiedad emocional",
-      score:result.scores.anxiety,
-      max:20,
-      level:levelForAnxiety(result.scores.anxiety)
-    },
-
-    {
-      name:"Síntomas físicos",
-      score:result.scores.physical,
-      max:40,
-      level:levelForPhysical(result.scores.physical)
-    },
-
-    {
-      name:"Depresión",
-      score:result.scores.depression,
-      max:20,
-      level:levelForDepression(result.scores.depression)
-    },
-
-    {
-      name:"Seguridad emocional",
-      score:result.scores.safety,
-      max:8,
-      level:[
-        result.scores.safety>0
-          ? "Requiere atención"
-          : "Sin señal registrada",
-        result.scores.safety>0
-          ? "red"
-          : "green"
-      ]
-    }
-
+    {name:"Ansiedad emocional", score:result.scores.anxiety, max:20, level:levelForAnxiety(result.scores.anxiety)},
+    {name:"Síntomas físicos", score:result.scores.physical, max:40, level:levelForPhysical(result.scores.physical)},
+    {name:"Depresión", score:result.scores.depression, max:20, level:levelForDepression(result.scores.depression)},
+    {name:"Seguridad emocional", score:result.scores.safety, max:8, level:[result.scores.safety>0 ? "Requiere atención" : "Sin señal registrada", result.scores.safety>0 ? "red" : "green"]}
   ];
 
   container.innerHTML="";
 
   data.forEach(area=>{
-
-    const percent=
-      Math.min(
-        100,
-        (area.score/area.max)*100
-      );
-
+    const percent = Math.min(100, (area.score/area.max)*100);
     const div=document.createElement("div");
-
     div.className="area-row";
 
     div.innerHTML=`
-
       <div class="area-head">
-
         <div>
           <div class="area-name">${area.name}</div>
-          <small style="color:#687386">
-            ${area.level[0]}
-          </small>
+          <small style="color:#687386">${area.level[0]}</small>
         </div>
-
-        <div class="area-score">
-          ${area.score}/${area.max}
-        </div>
-
+        <div class="area-score">${area.score}/${area.max}</div>
       </div>
-
       <div class="area-track">
-
-        <div
-          class="area-fill fill-${area.level[1]}"
-          style="width:${percent}%">
-        </div>
-
+        <div class="area-fill fill-${area.level[1]}" style="width:0%"></div>
       </div>
-
     `;
-
     container.appendChild(div);
 
+    // Animación de barra progresiva
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        div.querySelector('.area-fill').style.width = `${percent}%`;
+      }, 50);
+    });
   });
-
 }
 
 
 /* ================= ANÁLISIS INTELIGENTE ================= */
 
 function renderSmartAnalysis(result){
-
   const history=getHistory();
-
   const box=document.getElementById("smartAnalysis");
-
   let html="";
 
   if(history.length<=1){
-
-    html+=`
-
-      <div class="insight">
-
-        <strong>🌱 Primera medición</strong>
-
-        Esta es tu primera medición guardada.
-        A medida que registres nuevas mediciones,
-        Ánimo podrá comparar tus resultados y detectar cambios.
-
-      </div>
-
-    `;
-
+    html+=`<div class="insight"><strong>🌱 Primera medición</strong> Esta es tu primera medición guardada. A medida que registres nuevas mediciones, Ánimo podrá comparar tus resultados y detectar cambios.</div>`;
   }else{
-
     const previous=history[history.length-2];
-
     const diff=result.total-previous.total;
-
     let text="Tu puntuación se mantiene muy similar a la medición anterior.";
+    if(diff<0){ text=`Tu puntuación bajó ${Math.abs(diff)} punto${Math.abs(diff)!==1?"s":""} respecto a tu medición anterior.`; }
+    else if(diff>0){ text=`Tu puntuación aumentó ${diff} punto${diff!==1?"s":""} respecto a tu medición anterior.`; }
 
-    if(diff<0){
+    html+=`<div class="insight"><strong>📊 Comparación</strong> ${text} Recuerda que una sola medición no define tu estado emocional.</div>`;
 
-      text=
-        `Tu puntuación bajó ${Math.abs(diff)} punto${Math.abs(diff)!==1?"s":""} respecto a tu medición anterior.`;
-
-    }else if(diff>0){
-
-      text=
-        `Tu puntuación aumentó ${diff} punto${diff!==1?"s":""} respecto a tu medición anterior.`;
-
-    }
-
-    html+=`
-
-      <div class="insight">
-
-        <strong>📊 Comparación</strong>
-
-        ${text}
-
-        Recuerda que una sola medición no define tu estado emocional.
-
-      </div>
-
-    `;
-
-    const areas=[
-      ["Ansiedad emocional","anxiety"],
-      ["Síntomas físicos","physical"],
-      ["Depresión","depression"]
-    ];
-
+    const areas=[["Ansiedad emocional","anxiety"], ["Síntomas físicos","physical"], ["Depresión","depression"]];
     areas.forEach(([name,key])=>{
-
       const d=result.scores[key]-previous.scores[key];
-
       if(Math.abs(d)>=2){
-
-        html+=`
-
-          <div class="insight">
-
-            <strong>${d<0?"↘️":"↗️"} ${name}</strong>
-
-            ${d<0
-              ? `Esta área disminuyó ${Math.abs(d)} puntos respecto a tu medición anterior.`
-              : `Esta área aumentó ${d} puntos respecto a tu medición anterior.`
-            }
-
-          </div>
-
-        `;
-
+        html+=`<div class="insight"><strong>${d<0?"↘️":"↗️"} ${name}</strong> ${d<0 ? `Esta área disminuyó ${Math.abs(d)} puntos respecto a tu medición anterior.` : `Esta área aumentó ${d} puntos respecto a tu medición anterior.`}</div>`;
       }
-
     });
-
   }
 
-
-  /* Área dominante */
-
   const areas=[
-    {
-      name:"ansiedad emocional",
-      score:result.scores.anxiety,
-      max:20
-    },
-    {
-      name:"síntomas físicos",
-      score:result.scores.physical,
-      max:40
-    },
-    {
-      name:"depresión",
-      score:result.scores.depression,
-      max:20
-    }
+    {name:"ansiedad emocional", score:result.scores.anxiety, max:20},
+    {name:"síntomas físicos", score:result.scores.physical, max:40},
+    {name:"depresión", score:result.scores.depression, max:20}
   ];
 
-  areas.forEach(a=>{
-    a.percent=a.score/a.max;
-  });
-
+  areas.forEach(a=>{ a.percent=a.score/a.max; });
   areas.sort((a,b)=>b.percent-a.percent);
-
   const strongest=areas[0];
 
   if(strongest.percent>=.45){
-
-    html+=`
-
-      <div class="insight">
-
-        <strong>🔎 Área que más destaca</strong>
-
-        En esta medición, los <b>${strongest.name}</b>
-        representan la mayor proporción de tus puntuaciones.
-
-        Esto no significa que exista un diagnóstico; simplemente
-        indica dónde se concentraron más tus respuestas hoy.
-
-      </div>
-
-    `;
-
+    html+=`<div class="insight"><strong>🔎 Área que más destaca</strong> En esta medición, los <b>${strongest.name}</b> representan la mayor proporción de tus puntuaciones. Esto no significa que exista un diagnóstico; simplemente indica dónde se concentraron más tus respuestas hoy.</div>`;
   }
 
-
-  /* Señales físicas */
-
-  if(
-    result.scores.physical>=11 &&
-    result.scores.anxiety>=9
-  ){
-
-    html+=`
-
-      <div class="insight">
-
-        <strong>🫀 Conexión emocional-física</strong>
-
-        Tus respuestas muestran una presencia importante
-        tanto de ansiedad emocional como de síntomas físicos.
-
-        Puede ser útil observar cuándo aparecen estas sensaciones,
-        qué estaba ocurriendo antes y cómo cambian posteriormente.
-
-      </div>
-
-    `;
-
+  if(result.scores.physical>=11 && result.scores.anxiety>=9){
+    html+=`<div class="insight"><strong>🫀 Conexión emocional-física</strong> Tus respuestas muestran una presencia importante tanto de ansiedad emocional como de síntomas físicos. Puede ser útil observar cuándo aparecen estas sensaciones, qué estaba ocurriendo antes y cómo cambian posteriormente.</div>`;
   }
-
-
-  /* Depresión */
 
   if(result.scores.depression>=9){
-
-    html+=`
-
-      <div class="insight">
-
-        <strong>🌧️ Estado de ánimo</strong>
-
-        Tus respuestas muestran varios indicadores relacionados
-        con el estado de ánimo bajo. Si esto persiste o está afectando
-        tu funcionamiento diario, considera hablar con un profesional.
-
-      </div>
-
-    `;
-
+    html+=`<div class="insight"><strong>🌧️ Estado de ánimo</strong> Tus respuestas muestran varios indicadores relacionados con el estado de ánimo bajo. Si esto persiste o está afectando tu funcionamiento diario, considera hablar con un profesional.</div>`;
   }
-
-
   box.innerHTML=html;
-
 }
 
 
 /* ================= SEGURIDAD ================= */
 
 function renderSafety(result){
-
   const box=document.getElementById("safetyBox");
-
   if(result.scores.safety>0){
-
     box.innerHTML=`
-
       <div class="safety">
-
         <h3>🆘 Tu seguridad es lo primero</h3>
-
-        <p>
-          Una de tus respuestas indica presencia de pensamientos
-          relacionados con el suicidio o con poner fin a tu vida.
-        </p>
-
-        <p>
-          Por favor, no afrontes esto a solas. Busca ahora mismo
-          a una persona de confianza y solicita apoyo profesional.
-          Si existe riesgo inmediato de hacerte daño, contacta
-          los servicios de emergencia de tu país o acude al servicio
-          de urgencias más cercano.
-        </p>
-
-        <button class="btn btn-primary"
-          onclick="alert('Busca compañía de una persona de confianza y contacta los servicios de emergencia o urgencias si existe riesgo inmediato.')">
-          Necesito ayuda ahora
-        </button>
-
+        <p>Una de tus respuestas indica presencia de pensamientos relacionados con el suicidio o con poner fin a tu vida.</p>
+        <p>Por favor, no afrontes esto a solas. Busca ahora mismo a una persona de confianza y solicita apoyo profesional. Si existe riesgo inmediato de hacerte daño, contacta los servicios de emergencia de tu país o acude al servicio de urgencias más cercano.</p>
+        <button class="btn btn-primary" onclick="showToast('Busca compañía de una persona de confianza o llama a emergencias.')">Necesito ayuda ahora</button>
       </div>
-
     `;
-
   }else{
-
     box.innerHTML="";
-
   }
-
 }
 
 
 /* ================= STORAGE ================= */
 
 function getHistory(){
-
-  try{
-
-    return JSON.parse(
-      localStorage.getItem("animo_history") || "[]"
-    );
-
-  }catch(e){
-
-    return [];
-
-  }
-
+  try{ return JSON.parse(localStorage.getItem("animo_history") || "[]"); }
+  catch(e){ return []; }
 }
-
 
 function saveResult(result){
-
   const history=getHistory();
-
   history.push(result);
-
-  localStorage.setItem(
-    "animo_history",
-    JSON.stringify(history)
-  );
-
+  localStorage.setItem("animo_history", JSON.stringify(history));
 }
 
-
 function clearHistory(){
-
-  if(!confirm(
-    "¿Seguro que quieres eliminar todo tu historial? Esta acción no se puede deshacer."
-  )){
-    return;
-  }
-
+  if(!confirm("¿Seguro que quieres eliminar todo tu historial? Esta acción no se puede deshacer.")){ return; }
   localStorage.removeItem("animo_history");
-
   updateHome();
-
   renderHistory();
-
   renderEvolution();
-
+  showToast("Historial eliminado correctamente");
 }
 
 
 /* ================= HOME ================= */
 
 function updateHome(){
-
   const history=getHistory();
-
-  document.getElementById("homeCount").textContent =
-    history.length;
+  document.getElementById("homeCount").textContent = history.length;
 
   if(history.length===0){
-
     document.getElementById("homeLast").textContent="—";
     document.getElementById("homeAverage").textContent="—";
     document.getElementById("homeTrend").textContent="—";
-
     return;
-
   }
 
   const last=history[history.length-1];
-
-  document.getElementById("homeLast").textContent =
-    last.total;
-
-  const average=
-    history.reduce((sum,x)=>sum+x.total,0) /
-    history.length;
-
-  document.getElementById("homeAverage").textContent =
-    average.toFixed(1);
+  document.getElementById("homeLast").textContent = last.total;
+  const average = history.reduce((sum,x)=>sum+x.total,0) / history.length;
+  document.getElementById("homeAverage").textContent = average.toFixed(1);
 
   if(history.length<2){
-
     document.getElementById("homeTrend").textContent="—";
-
   }else{
-
     const prev=history[history.length-2];
-
     const diff=last.total-prev.total;
-
-    document.getElementById("homeTrend").textContent =
-      diff<0 ? "↘ Mejor" :
-      diff>0 ? "↗ Subió" :
-      "→ Igual";
-
+    document.getElementById("homeTrend").textContent = diff<0 ? "↘ Mejor" : diff>0 ? "↗ Subió" : "→ Igual";
   }
-
 }
 
 
 /* ================= HISTORIAL ================= */
 
 function renderHistory(){
-
   const history=getHistory();
-
   const container=document.getElementById("historyList");
 
   if(history.length===0){
-
     container.innerHTML=`
-
       <div class="card empty">
-
         <div class="empty-icon">🌱</div>
-
         <strong>Aún no tienes mediciones</strong>
-
-        <p>
-          Cuando completes tu primera medición,
-          aparecerá aquí.
-        </p>
-
-        <button class="btn btn-primary"
-          onclick="startTest()">
-          Hacer primera medición
-        </button>
-
+        <p>Cuando completes tu primera medición, aparecerá aquí.</p>
+        <button class="btn btn-primary" onclick="startTest()">Hacer primera medición</button>
       </div>
-
     `;
-
     return;
-
   }
 
   container.innerHTML="";
-
   [...history].reverse().forEach(result=>{
-
     const date=new Date(result.date);
-
-    const formatted=date.toLocaleDateString(
-      "es-CO",
-      {
-        day:"numeric",
-        month:"long",
-        year:"numeric"
-      }
-    );
-
+    const formatted=date.toLocaleDateString("es-CO", {day:"numeric", month:"long", year:"numeric"});
     const div=document.createElement("div");
-
     div.className="history-item";
 
     div.innerHTML=`
-
       <div class="history-top">
-
-        <div class="history-date">
-          ${formatted}
-        </div>
-
-        <div class="history-total">
-          ${result.total}
-        </div>
-
+        <div class="history-date">${formatted}</div>
+        <div class="history-total">${result.total}</div>
       </div>
-
       <div class="mini-bars">
-
-        ${miniBar(
-          "Ansiedad",
-          result.scores.anxiety,
-          20
-        )}
-
-        ${miniBar(
-          "Física",
-          result.scores.physical,
-          40
-        )}
-
-        ${miniBar(
-          "Depresión",
-          result.scores.depression,
-          20
-        )}
-
+        ${miniBar("Ansiedad", result.scores.anxiety, 20)}
+        ${miniBar("Física", result.scores.physical, 40)}
+        ${miniBar("Depresión", result.scores.depression, 20)}
       </div>
-
     `;
-
     container.appendChild(div);
-
   });
-
 }
 
-
 function miniBar(name,value,max){
-
   const width=Math.min(100,(value/max)*100);
-
   return`
-
     <div class="mini">
-
       ${name} · ${value}
-
       <div class="mini-track">
-
-        <div
-          class="mini-fill"
-          style="width:${width}%;background:#315d7c">
-        </div>
-
+        <div class="mini-fill" style="width:${width}%;background:#315d7c"></div>
       </div>
-
     </div>
-
   `;
-
 }
 
 
 /* ================= EVOLUCIÓN ================= */
 
 function changePeriod(days,button){
-
   currentPeriod=days;
-
-  document.querySelectorAll(".period").forEach(b=>{
-    b.classList.remove("active");
-  });
-
+  document.querySelectorAll(".period").forEach(b=>{ b.classList.remove("active"); });
   button.classList.add("active");
-
   renderEvolution();
-
 }
-
 
 function getFilteredHistory(){
-
   const history=getHistory();
-
-  if(currentPeriod===9999)
-    return history;
-
-  const cutoff=
-    Date.now() -
-    currentPeriod*24*60*60*1000;
-
-  return history.filter(x=>
-    new Date(x.date).getTime()>=cutoff
-  );
-
+  if(currentPeriod===9999) return history;
+  const cutoff = Date.now() - currentPeriod*24*60*60*1000;
+  return history.filter(x=> new Date(x.date).getTime()>=cutoff);
 }
 
-
 function renderEvolution(){
-
   const history=getFilteredHistory();
-
   const all=getHistory();
 
   if(all.length===0){
-
     document.getElementById("trendNumber").textContent="—";
-
-    document.getElementById("trendDescription").textContent=
-      "Realiza al menos dos mediciones para empezar a observar una tendencia.";
-
+    document.getElementById("trendDescription").textContent="Realiza al menos dos mediciones para empezar a observar una tendencia.";
     document.getElementById("evoLast").textContent="—";
     document.getElementById("evoAverage").textContent="—";
     document.getElementById("evoBest").textContent="—";
     document.getElementById("evoWorst").textContent="—";
 
     drawEmptyChart("mainChart","Aún no hay datos");
-
     drawEmptyChart("areasChart","Aún no hay datos");
-
-    document.getElementById("evolutionInsight").innerHTML=
-      `<div class="insight">
-        Realiza algunas mediciones para que Ánimo pueda analizar tu evolución.
-      </div>`;
-
+    document.getElementById("evolutionInsight").innerHTML=`<div class="insight">Realiza algunas mediciones para que Ánimo pueda analizar tu evolución.</div>`;
     return;
-
   }
 
-
   const values=history.map(x=>x.total);
-
   const last=values[values.length-1];
-
-  const average=
-    values.reduce((a,b)=>a+b,0)/values.length;
-
+  const average = values.reduce((a,b)=>a+b,0)/values.length;
   const best=Math.min(...values);
-
   const worst=Math.max(...values);
-
 
   document.getElementById("evoLast").textContent=last;
   document.getElementById("evoAverage").textContent=average.toFixed(1);
   document.getElementById("evoBest").textContent=best;
   document.getElementById("evoWorst").textContent=worst;
 
-
   if(history.length>=2){
-
     const first=history[0].total;
     const diff=last-first;
-
-    const percent=
-      first===0
-      ? 0
-      : Math.round((diff/first)*100);
-
+    const percent = first===0 ? 0 : Math.round((diff/first)*100);
     const trend=document.getElementById("trendNumber");
 
-    trend.textContent=
-      diff===0
-        ? "→ 0%"
-        : diff<0
-          ? `↘ ${Math.abs(percent)}%`
-          : `↗ ${percent}%`;
-
-    trend.className=
-      "trend-number "+
-      (
-        diff<0
-          ? "trend-down"
-          : diff>0
-            ? "trend-up"
-            : "trend-flat"
-      );
-
-    document.getElementById("trendDescription").textContent=
-      diff<0
-        ? "Tu puntuación general ha disminuido desde el inicio de este período."
-        : diff>0
-          ? "Tu puntuación general ha aumentado desde el inicio de este período."
-          : "Tu puntuación general se mantiene estable.";
-
+    trend.textContent = diff===0 ? "→ 0%" : diff<0 ? `↘ ${Math.abs(percent)}%` : `↗ ${percent}%`;
+    trend.className = "trend-number " + (diff<0 ? "trend-down" : diff>0 ? "trend-up" : "trend-flat");
+    document.getElementById("trendDescription").textContent = diff<0 ? "Tu puntuación general ha disminuido desde el inicio de este período." : diff>0 ? "Tu puntuación general ha aumentado desde el inicio de este período." : "Tu puntuación general se mantiene estable.";
   }else{
-
     document.getElementById("trendNumber").textContent="—";
-
-    document.getElementById("trendDescription").textContent=
-      "Necesitas al menos dos mediciones para calcular una tendencia.";
-
+    document.getElementById("trendDescription").textContent="Necesitas al menos dos mediciones para calcular una tendencia.";
   }
 
-
   drawMainChart(history);
-
   drawAreasChart(history);
-
   renderEvolutionInsight(history);
-
 }
 
-
 function renderEvolutionInsight(history){
-
   const box=document.getElementById("evolutionInsight");
 
   if(history.length<2){
-
-    box.innerHTML=`
-
-      <div class="insight">
-
-        <strong>🌱 Estamos empezando</strong>
-
-        Con una segunda medición podremos comenzar
-        a comparar tus resultados.
-
-      </div>
-
-    `;
-
+    box.innerHTML=`<div class="insight"><strong>🌱 Estamos empezando</strong> Con una segunda medición podremos comenzar a comparar tus resultados.</div>`;
     return;
-
   }
 
   const first=history[0];
   const last=history[history.length-1];
-
   let html="";
-
   const diff=last.total-first.total;
 
   if(diff<0){
-
-    html+=`
-
-      <div class="insight">
-
-        <strong>↘️ Cambio favorable</strong>
-
-        Tu puntuación general ha disminuido
-        ${Math.abs(diff)} puntos desde la primera medición
-        de este período.
-
-      </div>
-
-    `;
-
+    html+=`<div class="insight"><strong>↘️ Cambio favorable</strong> Tu puntuación general ha disminuido ${Math.abs(diff)} puntos desde la primera medición de este período.</div>`;
   }else if(diff>0){
-
-    html+=`
-
-      <div class="insight">
-
-        <strong>↗️ Cambio a observar</strong>
-
-        Tu puntuación general ha aumentado
-        ${diff} puntos desde la primera medición
-        de este período.
-
-      </div>
-
-    `;
-
+    html+=`<div class="insight"><strong>↗️ Cambio a observar</strong> Tu puntuación general ha aumentado ${diff} puntos desde la primera medición de este período.</div>`;
   }else{
-
-    html+=`
-
-      <div class="insight">
-
-        <strong>→ Estabilidad</strong>
-
-        Tu puntuación general se encuentra
-        prácticamente en el mismo nivel que al comienzo.
-
-      </div>
-
-    `;
-
+    html+=`<div class="insight"><strong>→ Estabilidad</strong> Tu puntuación general se encuentra prácticamente en el mismo nivel que al comienzo.</div>`;
   }
 
-
-  const keys=[
-    ["Ansiedad emocional","anxiety"],
-    ["Síntomas físicos","physical"],
-    ["Depresión","depression"]
-  ];
-
+  const keys=[["Ansiedad emocional","anxiety"], ["Síntomas físicos","physical"], ["Depresión","depression"]];
   keys.forEach(([name,key])=>{
-
     const d=last.scores[key]-first.scores[key];
-
     if(Math.abs(d)>=2){
-
-      html+=`
-
-        <div class="insight">
-
-          <strong>${d<0?"↘️":"↗️"} ${name}</strong>
-
-          Esta área ${d<0?"disminuyó":"aumentó"}
-          ${Math.abs(d)} puntos durante el período seleccionado.
-
-        </div>
-
-      `;
-
+      html+=`<div class="insight"><strong>${d<0?"↘️":"↗️"} ${name}</strong> Esta área ${d<0?"disminuyó":"aumentó"} ${Math.abs(d)} puntos durante el período seleccionado.</div>`;
     }
-
   });
 
   box.innerHTML=html;
-
 }
 
 
 /* ================= CANVAS ================= */
 
 function setupCanvas(canvas){
-
   const rect=canvas.getBoundingClientRect();
-
   const ratio=window.devicePixelRatio || 1;
-
   canvas.width=rect.width*ratio;
   canvas.height=rect.height*ratio;
-
   const ctx=canvas.getContext("2d");
-
   ctx.scale(ratio,ratio);
-
-  return {
-    ctx,
-    width:rect.width,
-    height:rect.height
-  };
-
+  return {ctx, width:rect.width, height:rect.height};
 }
 
-
 function drawEmptyChart(id,text){
-
   const canvas=document.getElementById(id);
-
   const {ctx,width,height}=setupCanvas(canvas);
-
   ctx.clearRect(0,0,width,height);
-
   ctx.fillStyle="#687386";
   ctx.font="13px -apple-system, sans-serif";
   ctx.textAlign="center";
-
-  ctx.fillText(
-    text,
-    width/2,
-    height/2
-  );
-
+  ctx.fillText(text, width/2, height/2);
 }
 
-
 function drawMainChart(history){
-
   const canvas=document.getElementById("mainChart");
-
   const {ctx,width,height}=setupCanvas(canvas);
-
   ctx.clearRect(0,0,width,height);
 
   if(history.length===0){
@@ -2504,140 +1892,67 @@ function drawMainChart(history){
     return;
   }
 
-  const padding={
-    left:10,
-    right:10,
-    top:15,
-    bottom:25
-  };
-
-  const chartW=
-    width-padding.left-padding.right;
-
-  const chartH=
-    height-padding.top-padding.bottom;
-
+  const padding={left:10, right:10, top:15, bottom:25};
+  const chartW=width-padding.left-padding.right;
+  const chartH=height-padding.top-padding.bottom;
   const maxValue=88;
-
-  /* grid */
 
   ctx.strokeStyle="#e9edf0";
   ctx.lineWidth=1;
-
   for(let i=0;i<=4;i++){
-
-    const y=
-      padding.top+
-      chartH*(i/4);
-
+    const y=padding.top+chartH*(i/4);
     ctx.beginPath();
     ctx.moveTo(padding.left,y);
     ctx.lineTo(width-padding.right,y);
     ctx.stroke();
-
   }
 
-
   const points=history.map((item,index)=>{
-
-    const x=
-      padding.left+
-      (history.length===1
-        ? chartW/2
-        : chartW*(index/(history.length-1)));
-
-    const y=
-      padding.top+
-      chartH-
-      (item.total/maxValue)*chartH;
-
+    const x=padding.left+(history.length===1 ? chartW/2 : chartW*(index/(history.length-1)));
+    const y=padding.top+chartH-(item.total/maxValue)*chartH;
     return {x,y,value:item.total};
-
   });
 
-
   if(points.length>1){
-
     ctx.beginPath();
-
     points.forEach((p,i)=>{
-
-      if(i===0)
-        ctx.moveTo(p.x,p.y);
-      else
-        ctx.lineTo(p.x,p.y);
-
+      if(i===0) ctx.moveTo(p.x,p.y);
+      else ctx.lineTo(p.x,p.y);
     });
-
     ctx.strokeStyle="#315d7c";
     ctx.lineWidth=3;
     ctx.lineJoin="round";
     ctx.lineCap="round";
     ctx.stroke();
-
   }
 
-
   points.forEach(p=>{
-
     ctx.beginPath();
     ctx.arc(p.x,p.y,5,0,Math.PI*2);
-
     ctx.fillStyle="#315d7c";
     ctx.fill();
-
     ctx.beginPath();
     ctx.arc(p.x,p.y,2,0,Math.PI*2);
-
     ctx.fillStyle="#fff";
     ctx.fill();
-
   });
-
 
   ctx.fillStyle="#687386";
   ctx.font="10px -apple-system, sans-serif";
   ctx.textAlign="left";
 
   points.forEach((p,i)=>{
-
-    if(
-      i===0 ||
-      i===points.length-1 ||
-      points.length<6
-    ){
-
-      const date=
-        new Date(history[i].date);
-
-      const label=
-        date.toLocaleDateString(
-          "es-CO",
-          {
-            day:"numeric",
-            month:"short"
-          }
-        );
-
-      ctx.fillText(
-        label,
-        p.x,
-        height-7
-      );
-
+    if(i===0 || i===points.length-1 || points.length<6){
+      const date=new Date(history[i].date);
+      const label=date.toLocaleDateString("es-CO", {day:"numeric", month:"short"});
+      ctx.fillText(label, p.x, height-7);
     }
-
   });
-
 }
 
-
 function drawAreasChart(history){
-
   const canvas=document.getElementById("areasChart");
-
   const {ctx,width,height}=setupCanvas(canvas);
-
   ctx.clearRect(0,0,width,height);
 
   if(history.length===0){
@@ -2646,109 +1961,49 @@ function drawAreasChart(history){
   }
 
   const last=history[history.length-1];
-
   const areas=[
-    {
-      name:"Ansiedad",
-      value:last.scores.anxiety,
-      max:20
-    },
-    {
-      name:"Física",
-      value:last.scores.physical,
-      max:40
-    },
-    {
-      name:"Depresión",
-      value:last.scores.depression,
-      max:20
-    }
+    {name:"Ansiedad", value:last.scores.anxiety, max:20},
+    {name:"Física", value:last.scores.physical, max:40},
+    {name:"Depresión", value:last.scores.depression, max:20}
   ];
 
-  const barWidth=
-    Math.min(75,width/(areas.length*2));
-
-  const gap=
-    width/areas.length;
+  const barWidth=Math.min(75,width/(areas.length*2));
+  const gap=width/areas.length;
 
   areas.forEach((area,index)=>{
-
-    const x=
-      gap*index+
-      gap/2-
-      barWidth/2;
-
+    const x=gap*index+gap/2-barWidth/2;
     const maxHeight=145;
-
-    const barHeight=
-      (area.value/area.max)*maxHeight;
-
-    const y=
-      height-38-barHeight;
+    const barHeight=(area.value/area.max)*maxHeight;
+    const y=height-38-barHeight;
 
     ctx.fillStyle="#315d7c";
-
     ctx.beginPath();
-
     if(ctx.roundRect){
-
-      ctx.roundRect(
-        x,
-        y,
-        barWidth,
-        barHeight,
-        10
-      );
-
+      ctx.roundRect(x,y,barWidth,barHeight,10);
     }else{
-
-      ctx.rect(
-        x,
-        y,
-        barWidth,
-        barHeight
-      );
-
+      ctx.rect(x,y,barWidth,barHeight);
     }
-
     ctx.fill();
 
     ctx.fillStyle="#172033";
     ctx.font="bold 12px -apple-system, sans-serif";
     ctx.textAlign="center";
-
-    ctx.fillText(
-      area.value,
-      x+barWidth/2,
-      y-8
-    );
+    ctx.fillText(area.value, x+barWidth/2, y-8);
 
     ctx.fillStyle="#687386";
     ctx.font="11px -apple-system, sans-serif";
-
-    ctx.fillText(
-      area.name,
-      x+barWidth/2,
-      height-17
-    );
-
+    ctx.fillText(area.name, x+barWidth/2, height-17);
   });
-
 }
 
 
 /* ================= EXPORTAR ================= */
 
 function exportData(){
-
   const history=getHistory();
-
   if(history.length===0){
-
-    alert("No tienes mediciones para exportar.");
-
+    showToast("No tienes mediciones para exportar.");
     return;
-
   }
 
   const data={
@@ -2758,54 +2013,36 @@ function exportData(){
     measurements:history
   };
 
-  const blob=new Blob(
-    [JSON.stringify(data,null,2)],
-    {type:"application/json"}
-  );
-
+  const blob=new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
   const url=URL.createObjectURL(blob);
-
   const a=document.createElement("a");
-
   a.href=url;
-
-  a.download=
-    `animo-datos-${new Date().toISOString().slice(0,10)}.json`;
-
+  a.download=`animo-datos-${new Date().toISOString().slice(0,10)}.json`;
+  
   document.body.appendChild(a);
-
   a.click();
-
   a.remove();
-
   URL.revokeObjectURL(url);
-
+  
+  showToast("Archivo exportado exitosamente");
 }
 
 
 /* ================= INICIALIZACIÓN ================= */
 
 buildQuestions();
-
 updateHome();
-
 renderHistory();
-
 renderEvolution();
 
 
 /* ================= REDIMENSIONAR GRÁFICOS ================= */
 
-window.addEventListener(
-  "resize",
-  ()=>{
-    if(
-      document.getElementById("evolution").classList.contains("active")
-    ){
-      renderEvolution();
-    }
+window.addEventListener("resize", ()=>{
+  if(document.getElementById("evolution").classList.contains("active")){
+    renderEvolution();
   }
-);
+});
 
 </script>
 
